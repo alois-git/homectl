@@ -4,7 +4,7 @@ use std::{
     collections::BTreeMap,
     fmt::{self, Display},
 };
-
+use std::collections::HashMap;
 use crate::core::scenes::Scenes;
 
 use super::{
@@ -217,6 +217,7 @@ pub enum SensorDevice {
     Boolean { value: bool },
     Text { value: String },
     Number { value: f64 },
+    NumberMap { values: HashMap<String, f64> },
     Color(ControllableState),
 }
 
@@ -227,6 +228,7 @@ impl Display for SensorDevice {
             SensorDevice::Text { value } => value.to_string(),
             SensorDevice::Number { value } => value.to_string(),
             SensorDevice::Color(state) => state.to_string(),
+            SensorDevice::NumberMap { .. } => { format!("{:?}", self) },
         };
 
         f.write_str(&s)

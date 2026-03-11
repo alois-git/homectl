@@ -12,6 +12,7 @@ use color_eyre::Result;
 use eyre::eyre;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
+use crate::integrations::huawei_solar::HuaweiSolar;
 
 #[derive(Clone)]
 pub struct LoadedIntegration {
@@ -79,8 +80,14 @@ impl Integrations {
         for (integration_id, li) in self.custom_integrations.iter() {
             let mut integration = li.integration.lock().await;
 
-            integration.start().await.unwrap();
-            info!("started {} integration {}", li.module_name, integration_id);
+            match integration.start().await {
+                Ok(_) => {
+                    info!("started {} integration {}", li.module_name, integration_id);
+                }
+                Err(e) => {
+                    error!("failed to start {} integration {} {}", li.module_name, integration_id, e);
+                }
+            }
         }
 
         Ok(())
@@ -148,6 +155,7 @@ fn load_custom_integration(
         "timer" => Ok(Box::new(Timer::new(id, config, cli, event_tx)?)),
         "dummy" => Ok(Box::new(Dummy::new(id, config, cli, event_tx)?)),
         "mqtt" => Ok(Box::new(Mqtt::new(id, config, cli, event_tx)?)),
+        "huawei_solar" => Ok(Box::new(HuaweiSolar::new(id, config, cli, event_tx)?)),
         _ => Err(eyre!("Unknown module name {module_name}!")),
     }
 }
